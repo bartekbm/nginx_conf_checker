@@ -2,8 +2,9 @@ import os
 import glob
 import re
 from reconfigure.parsers import NginxParser
-pattern = r"listen.*\b (443|ssl)\b"
-folder_path = 'conf.d'
+#raw string
+pattern = r"\blisten\s443\sssl\b|\blisten\s443\b|\blisten\sssl\b|\blisten\sssl\s443\b"
+folder_path = 'conf.d_tests'
 what_file = '*.conf'
 data = []
 
@@ -15,17 +16,28 @@ def initial_check_for_ssl():
             f = f.read()
 
             config = NginxParser()
-            config = config.parse(content=f)
-            test = config.get_all('server')
+            try:
+                config = config.parse(content=f)
+            except Exception as e:
+                s = str(e)
+                print(s)
+                pass
+            else:
+                test = config.get_all('server')
 
             for a in test:
-                for i in a.get_all('listen'):
-                    if str(i) == 'listen = 443 ssl':
-                        print(a.get('listen'))
-                        print(a.get('server_name'))
-                        print(a.get('ssl_certificate'))
+
+                    for i in a.get_all('listen'):
+                        x = re.search(pattern,str(i))
+                        print('PATTERN',x)
+                        if str(i) == 'listen = 443 ssl':
+                            [print(i) for i in a.get_all('listen')]
+                            print(a.get('server_name'))
+                            print(a.get('ssl_certificate'))
 
 
+initial_check_for_ssl()
+print(data)
 
 
 
@@ -37,5 +49,4 @@ def initial_check_for_ssl():
             #         word.append(filename.strip('conf.d\\')), data.append(word)
 
 
-initial_check_for_ssl()
-print(data)
+
