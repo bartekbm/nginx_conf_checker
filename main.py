@@ -3,8 +3,11 @@ import glob
 import re
 from reconfigure.parsers import NginxParser
 #raw string
-pattern = r"\blisten\s443\sssl\b|\blisten\s443\b|\blisten\sssl\b|\blisten\sssl\s443\b"
-folder_path = 'conf.d_tests'
+listen_patern = r'(?i)\blisten\s=\s443\b|\blisten\s=\sssl\b'
+#nie zadziala z server_name ie.shop.brainbraining.com www.ie.shop.brainbraining.com;
+www_pattern = r'\www(.*?)\.com' #tez nie moze byc bo zaczyna sie od com np server_name comfortingmindtraining.com www.comfortingmindtraining.com;
+ #r'www\.[a-zA-Za-z1-9]*\.[a-zA-Za-z1-9]*'
+folder_path = 'conf.d'
 what_file = '*.conf'
 data = []
 
@@ -28,16 +31,27 @@ def initial_check_for_ssl():
             for a in test:
 
                     for i in a.get_all('listen'):
-                        x = re.search(pattern,str(i))
-                        print('PATTERN',x)
-                        if str(i) == 'listen = 443 ssl':
-                            [print(i) for i in a.get_all('listen')]
-                            print(a.get('server_name'))
-                            print(a.get('ssl_certificate'))
 
 
+                        if re.findall(listen_patern,str(i)):
+                            #[print(i) for i in a.get_all('listen')]
+                            #print(a.get('server_name'))
+                            print(filename)
+                            parser(str(a.get('server_name')))
+                            #print(a.get('ssl_certificate'))
+                            pass
+
+
+def parser(string):
+    if 'server_name ' in string:
+        get_www = re.search(www_pattern, string)
+        if get_www:
+            x=string.replace(get_www[0],'')
+            #print(x.replace('server_name = ',''))
+
+            print(x)
+        #print('??',string)
 initial_check_for_ssl()
-print(data)
 
 
 
