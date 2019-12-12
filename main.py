@@ -23,7 +23,6 @@ files = []
 final_list = []
 parse_error = []
 no_cert_define = []
-#{file:name,server_name:server_name,ssl}
 
 
 def initial_check_for_ssl():
@@ -34,13 +33,13 @@ def initial_check_for_ssl():
         with open(filename, 'r') as f:
 
             f = f.read()
-            filename = filename.strip('conf.d\\')
+            filename = filename.replace('conf.d\\', '')
             config = NginxParser()
             try:
                 config = config.parse(content=f)
             except Exception as e:
                 error_message = str(e)
-                parse_error.append({'error_parsing':filename,'error_message':error_message})
+                parse_error.append({'error_parsing': filename, 'error_message': error_message})
                 pass
             else:
                 test = config.get_all('server')
@@ -50,14 +49,13 @@ def initial_check_for_ssl():
                     if re.findall(listen_patern, str(i)):
                         if str(a.get('ssl_certificate')) == 'None' or str(a.get('ssl_certificate_key')) == 'None':
                             count_no_cert_define += 1
-                            no_cert_define.append({'no_cert_define_for':filename})
+                            no_cert_define.append({'no_cert_define_for': filename})
 
                         parser(str(a.get('server_name')), str(a.get('ssl_certificate')),
                                str(a.get('ssl_certificate_key')), filename)
 
 
 def parser(server_name, ssl_certificate, ssl_certificate_key, filename):
-
     ssl_certificate = ssl_certificate.replace('ssl_certificate = ', '')
     ssl_certificate_key = ssl_certificate_key.replace('ssl_certificate_key = ', '')
     if 'server_name ' in server_name:
@@ -76,11 +74,11 @@ def parser(server_name, ssl_certificate, ssl_certificate_key, filename):
                 if ssl_certificate == 'None' or ssl_certificate_key == 'None':
                     pass
                 else:
-                    final_list.append({'file_name':filename,'domain_name':server_name,
-                                       'wrong_ssl_certificate_path':ssl_certificate,
-                                       'corect_ssl_certificate_path':f'/etc/nginx/ssl/{server_name}/{server_name}',
-                                       'wrong_ssl_key_path':ssl_certificate_key,'correct_ssl_key_path':
-                                       f'/etc/nginx/ssl/{server_name}/{server_name}.key'})
+                    final_list.append({'file_name': filename, 'domain_name': server_name,
+                                       'wrong_ssl_certificate_path': ssl_certificate,
+                                       'corect_ssl_certificate_path': f'/etc/nginx/ssl/{server_name}/{server_name}',
+                                       'wrong_ssl_key_path': ssl_certificate_key, 'correct_ssl_key_path':
+                                           f'/etc/nginx/ssl/{server_name}/{server_name}.key'})
                 pass
         else:
             server_name = server_name.replace('server_name =', '')
@@ -103,7 +101,11 @@ def parser(server_name, ssl_certificate, ssl_certificate_key, filename):
 
 initial_check_for_ssl()
 
-final_list.append(no_cert_define)
-final_list.append(parse_error)
+if final_list:
+    if no_cert_define:
+        final_list.append(no_cert_define)
+    if parse_error:
+        final_list.append(parse_error)
+    final_list.append(f'Parsed {count_all_files} files')
 with open('test.txt', 'w') as json_file:
-  json.dump(final_list, json_file, indent=2)
+    json.dump(final_list, json_file, indent=2)
