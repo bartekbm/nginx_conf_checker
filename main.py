@@ -46,10 +46,16 @@ def initial_check_for_ssl():
 
             for a in test:
                 for i in a.get_all('listen'):
+                    print(a.get('server_name'))
+                    print(i)
+
                     if re.findall(listen_patern, str(i)):
+
                         if str(a.get('ssl_certificate')) == 'None' or str(a.get('ssl_certificate_key')) == 'None':
                             count_no_cert_define += 1
                             no_cert_define.append({'no_cert_define_for': filename})
+
+
 
                         parser(str(a.get('server_name')), str(a.get('ssl_certificate')),
                                str(a.get('ssl_certificate_key')), filename)
@@ -58,6 +64,7 @@ def initial_check_for_ssl():
 def parser(server_name, ssl_certificate, ssl_certificate_key, filename):
     ssl_certificate = ssl_certificate.replace('ssl_certificate = ', '')
     ssl_certificate_key = ssl_certificate_key.replace('ssl_certificate_key = ', '')
+
     if 'server_name ' in server_name:
         get_www = re.search(www_pattern, server_name)
         if get_www:
